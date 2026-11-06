@@ -1,0 +1,1453 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mindrative Institutional Developer API",
+    "version": "1.0.0",
+    "description": "Portfolio valuation and page briefings use observed data. Server clients can exchange existing API credentials for 15-minute access tokens. Supported long-running scans and briefings can run asynchronously through polling. AI memo generation is enabled by default and can be disabled per scan.",
+    "contact": {
+      "name": "Mindrative Developer Relations & Quant Support",
+      "email": "support@mindrative.com",
+      "url": "https://mindrative.com"
+    },
+    "termsOfService": "https://mindrative.com/terms.html"
+  },
+  "servers": [
+    {
+      "url": "https://api.mindrative.com/v1",
+      "description": "Production API"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    },
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/portfolio/scan": {
+      "post": {
+        "summary": "Execute Portfolio Auto-Scan",
+        "operationId": "executePortfolioAutoScan",
+        "description": "Calculates NAV from current security and USD cash positions and the latest common-date observed closing prices. Fractional share quantities are supported; cash is held at par without interest. Period returns use price returns and exclude trades, fees, and distributions. AI memo generation is enabled by default and can be disabled. Send Prefer: respond-async to receive a job for polling instead of waiting for the scan. The response also includes descriptive findings.session_brief analytics.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Optional opaque retry token: 1-128 letters, digits, dots, underscores, colons, or hyphens. Reusing it with a different request payload returns 409. Replay is best-effort and does not guarantee exactly-once execution.",
+            "schema": {
+              "type": "string",
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+            }
+          },
+          {
+            "name": "X-Client-Version",
+            "in": "header",
+            "required": false,
+            "description": "Client integration version string for audit logs.",
+            "schema": {
+              "type": "string",
+              "example": "2026.10"
+            }
+          },
+          {
+            "name": "Prefer",
+            "in": "header",
+            "required": false,
+            "description": "Set to respond-async to queue the scan and receive HTTP 202 with a job status URL.",
+            "schema": {
+              "type": "string",
+              "example": "respond-async"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "description": "Portfolio holdings and scan options. NAV is calculated from shares multiplied by the latest available observed close.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PortfolioScanRequest"
+              },
+              "examples": {
+                "customHoldings": {
+                  "summary": "Custom portfolio scan",
+                  "value": {
+                    "positions": [
+                      {
+                        "symbol": "NVDA",
+                        "shares": 50,
+                        "weight": 25.0
+                      },
+                      {
+                        "symbol": "MSFT",
+                        "shares": 30,
+                        "weight": 25.0
+                      },
+                      {
+                        "symbol": "AAPL",
+                        "shares": 40,
+                        "weight": 25.0
+                      },
+                      {
+                        "symbol": "AMZN",
+                        "shares": 20,
+                        "weight": 25.0
+                      }
+                    ],
+                    "benchmark": "SPY",
+                    "include_ai_memo": false,
+                    "timeframe": "3M",
+                    "note": "Quarterly risk rebalancing review"
+                  }
+                },
+                "defaultCommitted": {
+                  "summary": "Scan Default Committed Account Portfolio",
+                  "value": {
+                    "include_ai_memo": false,
+                    "benchmark": "SPY"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Portfolio scan calculated from available observed market history. AI memo generation is enabled by default and may be omitted when disabled or unavailable.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "The maximum number of requests allowed per minute (60 for Ultra tier)."
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "The number of remaining requests in the current rate limit window."
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "The Unix epoch timestamp when the current rate limit window resets."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique trace identifier for this API transaction."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioScanResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: Malformed JSON, invalid fields, invalid holdings, unsupported route fields, or invalid timeframe.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency-Key was previously used with a different request payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed. Supply a valid active API key in a supported authentication header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden: Requires an eligible subscription, a permitted source address, and the required API scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests: The per-key 60-request rolling limit was reached in the current 60-second window.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Number of seconds to wait before retrying."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds the 128 KiB limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json when specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The request could not be completed due to a server-side error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Asynchronous scan accepted. Poll the returned status_url.",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Market data is unavailable, stale, or insufficient for valuation, or the service is temporarily unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/market/briefing": {
+      "post": {
+        "summary": "Execute Market Pulse Briefing",
+        "operationId": "executeMarketBriefing",
+        "description": "Returns the benchmark's observed close, return, annualized volatility, and maximum drawdown. A benchmark-only empty request is supported; an optional timeframe selects the measurement window when data is available. Values use aligned closing-price history and exclude distributions.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Optional opaque retry token: 1-128 letters, digits, dots, underscores, colons, or hyphens. Reusing it with a different request payload returns 409. Replay is best-effort and does not guarantee exactly-once execution.",
+            "schema": {
+              "type": "string",
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "description": "Optional benchmark and timeframe. Positions or symbols may be supplied if aligned portfolio context is also desired.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BriefingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Briefing calculated from available observed market history.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefingResultResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Required data is unavailable or insufficient, or the service is temporarily unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "403": {
+            "description": "Required API scope is missing."
+          },
+          "429": {
+            "description": "The shared per-key 60-request rolling limit was reached."
+          }
+        }
+      }
+    },
+    "/explorer/briefing": {
+      "post": {
+        "summary": "Execute Portfolio Explorer Briefing",
+        "operationId": "executeExplorerBriefing",
+        "description": "Returns the latest ten common-date closes plus close-derived price, return, RSI/MACD, trend, 52-week range, and z-score context for requested holdings. Does not scan the full market universe.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Optional opaque retry token: 1-128 letters, digits, dots, underscores, colons, or hyphens. Reusing it with a different request payload returns 409. Replay is best-effort and does not guarantee exactly-once execution.",
+            "schema": {
+              "type": "string",
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "description": "Optional positions, symbols, or benchmark. If holdings are omitted, uses the account's configured portfolio when available.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BriefingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Briefing calculated from available observed market history.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefingResultResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Required data is unavailable or insufficient, or the service is temporarily unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "403": {
+            "description": "Required API scope is missing."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          }
+        }
+      }
+    },
+    "/insight/briefing": {
+      "post": {
+        "summary": "Execute Daily Insight Briefing",
+        "operationId": "executeInsightBriefing",
+        "description": "Returns observed fixed-share price contributions over the requested timeframe when the full period is available; otherwise labels the actual observed window. Excludes distributions, fees, cash flows, and transactions.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Optional opaque retry token: 1-128 letters, digits, dots, underscores, colons, or hyphens. Reusing it with a different request payload returns 409. Replay is best-effort and does not guarantee exactly-once execution.",
+            "schema": {
+              "type": "string",
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "description": "Optional positions, benchmark, and timeframe. If holdings are omitted, uses the account's configured portfolio when available.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BriefingRequest"
+              },
+              "examples": {
+                "customHoldings": {
+                  "summary": "Custom Portfolio Briefing",
+                  "value": {
+                    "positions": [
+                      {
+                        "symbol": "NVDA",
+                        "shares": 50,
+                        "weight": 50.0
+                      },
+                      {
+                        "symbol": "MSFT",
+                        "shares": 30,
+                        "weight": 50.0
+                      }
+                    ],
+                    "benchmark": "SPY"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Briefing calculated from available observed market history.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefingResultResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Required data is unavailable or insufficient, or the service is temporarily unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "403": {
+            "description": "Required API scope is missing."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          }
+        }
+      }
+    },
+    "/brief/{page}": {
+      "post": {
+        "summary": "Execute Page Auto-Briefing",
+        "operationId": "executePageAutoBriefing",
+        "description": "Returns source-backed page briefing data. Screener and AlphaDeck return multi-horizon and benchmark-relative rankings, technical breadth, and coverage; Screener includes available earnings dates and marks volume/macro flags unavailable when unsourced. Explorer returns indexed requested-holding histories, period breadth, rankings, and sector summaries, not a full-universe scan. Backtest returns fixed-share history, annual/monthly returns, and win-rate detail, not strategy trades. Frontier returns asset statistics, sampled allocations, pairwise correlations, and optimizer diagnostics. Seasonality returns holding, portfolio, and benchmark monthly samples plus comparisons. Profiler returns published fundamentals, metric summaries, and multi-horizon price context. Projection returns a page-style 10,000-path GBM model, terminal probabilities, calibration sources, and separate realized scenarios. Diagnostics includes coverage, historical VaR/expected shortfall, correlations, approximate risk contributions, concentration, and beta sensitivities. Insight includes period returns, breadth, benchmark/sector context, and daily history. Market returns benchmark and sector analytics; Macro Intel returns published classified news and sentiment history. Prefer: respond-async is supported only for Projection and Frontier.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "path",
+            "required": true,
+            "description": "Identifier of the requested page briefing.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "macro",
+                "screener",
+                "alphadeck",
+                "backtest",
+                "frontier",
+                "seasonality",
+                "profiler",
+                "projection",
+                "diagnostics",
+                "insight",
+                "market",
+                "explorer"
+              ],
+              "example": "market"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Optional opaque retry token: 1-128 letters, digits, dots, underscores, colons, or hyphens. Reusing it with a different request payload returns 409. Replay is best-effort and does not guarantee exactly-once execution.",
+            "schema": {
+              "type": "string",
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+            }
+          },
+          {
+            "name": "Prefer",
+            "in": "header",
+            "required": false,
+            "description": "Set to respond-async for Projection or Frontier to queue the request.",
+            "schema": {
+              "type": "string",
+              "example": "respond-async"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "description": "Route-specific JSON fields are strict. Positions and symbols are mutually exclusive. Use positions for share quantities; symbols-only requests are supported by screener, alphadeck, seasonality, profiler, explorer, and market. Macro accepts optional date and days (1–3650). Timeframe is accepted by screener, alphadeck, backtest, frontier, seasonality, profiler, diagnostics, insight, market, and explorer. Defaults vary by page: most holdings analytics use 1Y; Portfolio Scan and Market Pulse use 3M. Projection uses lookback/horizon inputs.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BriefingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Briefing calculated from available source data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefingResultResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Projection or Frontier job accepted. Poll the returned status_url.",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Required data is unavailable, stale, or insufficient, or the service is temporarily unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON, invalid values, mutually exclusive holdings inputs, or fields unsupported by the selected page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "403": {
+            "description": "Required API scope is missing."
+          },
+          "409": {
+            "description": "Idempotency-Key was previously used with a different request payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 128 KiB."
+          },
+          "415": {
+            "description": "Content-Type must be application/json when specified."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          }
+        }
+      }
+    },
+    "/oauth/token": {
+      "post": {
+        "summary": "Exchange API key credentials for an access token",
+        "operationId": "createAccessToken",
+        "security": [
+          {
+            "BasicClientAuth": []
+          }
+        ],
+        "description": "Use HTTP Basic client authentication with client_id set to the API key ID and client_secret set to the one-time API key. The returned access token is valid for 15 minutes and inherits the key's scopes and IP allowlist.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "grant_type"
+                ],
+                "properties": {
+                  "grant_type": {
+                    "type": "string",
+                    "const": "client_credentials"
+                  },
+                  "scope": {
+                    "type": "string",
+                    "description": "Optional space-separated subset of portfolio:scan and brief:read."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token issued.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "access_token",
+                    "token_type",
+                    "expires_in",
+                    "scope"
+                  ],
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "token_type": {
+                      "type": "string",
+                      "const": "Bearer"
+                    },
+                    "expires_in": {
+                      "type": "integer",
+                      "const": 900
+                    },
+                    "scope": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or scope."
+          },
+          "401": {
+            "description": "Client credentials are invalid."
+          },
+          "403": {
+            "description": "Client IP is not permitted."
+          }
+        }
+      }
+    },
+    "/jobs/{job_id}": {
+      "get": {
+        "summary": "Get asynchronous job status and result",
+        "operationId": "getAsyncJob",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^job_[0-9a-f]{32}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job status and result or error when complete."
+          },
+          "404": {
+            "description": "Job not found, expired, or not owned by this client."
+          }
+        }
+      }
+    },
+    "/receipts/keys": {
+      "get": {
+        "summary": "Get the public key used to verify scan receipts",
+        "operationId": "getScanReceiptPublicKey",
+        "security": [],
+        "description": "Returns public verification material only. key_id is sha256:<hex fingerprint> of the DER-encoded public key; it is not a cloud KMS resource identifier.",
+        "responses": {
+          "200": {
+            "description": "Public scan receipt verification key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "key_id",
+                    "algorithm",
+                    "key_spec",
+                    "public_key",
+                    "public_key_sha256"
+                  ],
+                  "properties": {
+                    "key_id": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "algorithm": {
+                      "type": "string",
+                      "const": "RSASSA_PSS_SHA_256"
+                    },
+                    "key_spec": {
+                      "type": "string"
+                    },
+                    "public_key": {
+                      "type": "string",
+                      "description": "PEM-encoded public verification key."
+                    },
+                    "public_key_sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Public verification key is temporarily unavailable."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT or mnd_live API key",
+        "description": "Pass your institutional API key with the standard Authorization Bearer header: `Authorization: Bearer mnd_live_...`"
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Alternative header for systems that require custom header authentication: `X-API-Key: mnd_live_...`"
+      },
+      "BasicClientAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "Use the API key ID as username and the one-time API key as password when requesting /oauth/token."
+      }
+    },
+    "schemas": {
+      "PortfolioScanRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "positions": {
+            "type": "array",
+            "description": "Array of security and USD cash positions. Security count is limited by the authenticated API key's symbol_limit.",
+            "items": {
+              "$ref": "#/components/schemas/HoldingItem"
+            }
+          },
+          "benchmark": {
+            "type": "string",
+            "default": "SPY",
+            "description": "Reference benchmark (default: 'SPY'). SPY, SP500, and ^GSPC use the portal's S&P 500 index close series; other symbols use their own observed closing prices.",
+            "example": "SPY"
+          },
+          "include_ai_memo": {
+            "type": "boolean",
+            "default": true,
+            "description": "AI memo generation is enabled by default. Set false to skip it; response includes ai_memo_status."
+          },
+          "timeframe": {
+            "type": "string",
+            "enum": [
+              "1W",
+              "1M",
+              "3M",
+              "6M",
+              "1Y"
+            ],
+            "default": "3M",
+            "description": "Requested historical window. Period statistics are null when the common history does not cover the full window."
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 300,
+            "description": "Optional client reference returned as scan.client_reference; does not affect calculations."
+          }
+        }
+      },
+      "BriefingRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "not": {
+          "required": [
+            "positions",
+            "symbols"
+          ]
+        },
+        "properties": {
+          "positions": {
+            "type": "array",
+            "description": "Security and cash positions. Securities count toward the authenticated API key's symbol_limit; USD cash does not.",
+            "items": {
+              "$ref": "#/components/schemas/HoldingItem"
+            }
+          },
+          "symbols": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "description": "Ticker list for screener, alphadeck, seasonality, profiler, explorer, and market briefings. Each symbol is treated as one share.",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9.^-]{1,10}$"
+            }
+          },
+          "benchmark": {
+            "type": "string",
+            "default": "SPY",
+            "description": "Benchmark ticker. Accepted by routes whose calculations align against benchmark history.",
+            "example": "SPY"
+          },
+          "timeframe": {
+            "type": "string",
+            "enum": [
+              "1W",
+              "1M",
+              "3M",
+              "6M",
+              "1Y"
+            ],
+            "description": "Optional measurement window for routes that accept timeframe: 1W, 1M, 3M, 6M, or 1Y. Defaults to 1Y for Screener, AlphaDeck, Backtest, Frontier, Seasonality, Profiler, Diagnostics, Insight, and Explorer; defaults to 3M for Portfolio Scan and Market Pulse."
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Macro Intel only: select a published daily news dataset date, no later than today."
+          },
+          "days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3650,
+            "default": 90,
+            "description": "Macro Intel only: number of calendar days of aggregate sentiment history to return."
+          },
+          "lookback": {
+            "type": "string",
+            "enum": [
+              "1yr",
+              "3yr",
+              "5yr",
+              "10yr",
+              "15yr",
+              "20yr",
+              "25yr",
+              "max"
+            ],
+            "default": "10yr",
+            "description": "Projection only: historical calibration lookback."
+          },
+          "horizon_years": {
+            "type": "integer",
+            "enum": [
+              5,
+              10
+            ],
+            "default": 10,
+            "description": "Projection only: Monte Carlo horizon in years."
+          },
+          "starting_capital": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Projection only: positive simulation starting value; defaults to current portfolio NAV."
+          }
+        }
+      },
+      "HoldingItem": {
+        "type": "object",
+        "oneOf": [
+          {
+            "required": [
+              "symbol",
+              "shares"
+            ]
+          },
+          {
+            "required": [
+              "currency",
+              "amount"
+            ]
+          }
+        ],
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Uppercase ticker symbol (e.g., 'NVDA', 'AAPL', 'MSFT').",
+            "example": "NVDA"
+          },
+          "shares": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Positive share quantity; fractional quantities are supported.",
+            "example": 50
+          },
+          "currency": {
+            "type": "string",
+            "const": "USD",
+            "description": "Cash position currency; currently USD only."
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Positive cash amount held at par without interest."
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Target portfolio weight percentage (e.g. 25.0 for 25%).",
+            "example": 25.0
+          }
+        }
+      },
+      "PortfolioScanResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "request_id": {
+            "type": "string",
+            "example": "req_8f1b2c4d6e9a"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-23T07:45:00Z"
+          },
+          "api_version": {
+            "type": "string",
+            "example": "v1"
+          },
+          "tier": {
+            "type": "string",
+            "example": "ULTRA_INSTITUTIONAL"
+          },
+          "scan": {
+            "$ref": "#/components/schemas/ScanPayload"
+          }
+        }
+      },
+      "ScanPayload": {
+        "type": "object",
+        "properties": {
+          "scan_id": {
+            "type": "string",
+            "example": "scn_9c7d4e2a1b5f"
+          },
+          "as_of": {
+            "type": "string",
+            "example": "2026-10-23"
+          },
+          "benchmark": {
+            "type": "string",
+            "example": "SPY",
+            "description": "SPY, SP500, and ^GSPC use the S&P 500 index close series; other symbols use their own observed closing prices."
+          },
+          "timeframe": {
+            "type": "string",
+            "enum": [
+              "1W",
+              "1M",
+              "3M",
+              "6M",
+              "1Y"
+            ]
+          },
+          "holdings_count": {
+            "type": "integer"
+          },
+          "max_allowed_symbols": {
+            "type": "integer"
+          },
+          "client_reference": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 300,
+            "description": "Echo of the optional caller-supplied note for client-side reconciliation; not used in calculations."
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "nav": {
+                "type": "number",
+                "description": "Latest close-based portfolio market value."
+              },
+              "positions_count": {
+                "type": "integer",
+                "example": 4
+              },
+              "period_start": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date"
+              },
+              "period_end": {
+                "type": "string",
+                "format": "date"
+              },
+              "period_observations": {
+                "type": "integer"
+              },
+              "period_return_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Close-to-close price return over the requested timeframe, using the latest observed close on or before its start date."
+              },
+              "benchmark_period_return_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Benchmark close-to-close price return over the same dates as period_return_pct."
+              },
+              "day_return_pct": {
+                "type": "number"
+              },
+              "benchmark_day_return_pct": {
+                "type": "number"
+              },
+              "day_value_change": {
+                "type": "number"
+              },
+              "vs_benchmark_bps": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "Portfolio minus benchmark requested-period price return in basis points; null when the requested period is unavailable."
+              },
+              "day_vs_benchmark_bps": {
+                "type": "integer",
+                "description": "Portfolio minus benchmark one-day price return in basis points."
+              },
+              "return_3m_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Fixed trailing three-month close-to-close price return, independent of the requested timeframe."
+              },
+              "benchmark_return_3m_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Benchmark fixed trailing three-month close-to-close price return."
+              },
+              "annualized_volatility_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "max_drawdown_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sharpe_ratio": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Annualized using a 0% risk-free-rate assumption."
+              },
+              "beta": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "alpha_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Arithmetic annualized alpha using a 0% risk-free-rate assumption."
+              },
+              "risk_free_rate_annual_pct": {
+                "type": "number",
+                "const": 0
+              },
+              "pnl_assumption": {
+                "type": "string"
+              }
+            }
+          },
+          "holdings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string",
+                  "example": "NVDA"
+                },
+                "shares": {
+                  "type": "number",
+                  "example": 50
+                },
+                "price": {
+                  "type": "number",
+                  "description": "Latest observed closing price.",
+                  "example": 140.0
+                },
+                "price_as_of": {
+                  "type": "string",
+                  "format": "date",
+                  "description": "Date of the market-data close used for valuation.",
+                  "example": "2026-10-23"
+                },
+                "market_value": {
+                  "type": "number",
+                  "example": 7000.0
+                },
+                "weight_pct": {
+                  "type": "number",
+                  "example": 25.0
+                },
+                "target_weight_pct": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "sector": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "industry": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "trend": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "macd_state": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "rsi_14": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "month_return_pct": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "day_return_pct": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Holding close-to-close return on the latest common date."
+                },
+                "day_value_change": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Shares multiplied by latest close change from the prior common date."
+                },
+                "day_contribution_pct": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Holding daily value change divided by prior-day portfolio NAV, in percentage points."
+                },
+                "period_return_pct": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Holding close-to-close return over the requested timeframe."
+                },
+                "period_contribution_pct": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Holding value change divided by portfolio NAV at the requested period start, in percentage points."
+                },
+                "target_weight_delta_pct": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Actual market weight minus supplied target weight, in percentage points."
+                }
+              }
+            }
+          },
+          "findings": {
+            "type": "object",
+            "properties": {
+              "screener": {
+                "type": "object"
+              },
+              "alphadeck": {
+                "type": "object"
+              },
+              "session_brief": {
+                "type": "object",
+                "description": "Deterministic descriptive summary aligned with the Session Brief page. Uses observed prices; unavailable external context is identified in coverage.",
+                "properties": {
+                  "headline": {
+                    "type": "string"
+                  },
+                  "performance": {
+                    "type": "object"
+                  },
+                  "risk": {
+                    "type": "object"
+                  },
+                  "allocation": {
+                    "type": "object"
+                  },
+                  "notable_holdings": {
+                    "type": "object"
+                  },
+                  "coverage": {
+                    "type": "object"
+                  },
+                  "basis": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "ai_memo_status": {
+            "type": "string",
+            "enum": [
+              "skipped",
+              "not_requested"
+            ]
+          },
+          "receipt": {
+            "type": "object",
+            "properties": {
+              "receipt_id": {
+                "type": "string",
+                "example": "RCPT-A78F21D4BC90"
+              },
+              "issued_at": {
+                "type": "integer"
+              },
+              "algorithm": {
+                "type": "string",
+                "example": "HMAC-SHA256"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "signature": {
+                "type": "string"
+              },
+              "asymmetric_signature": {
+                "type": "object",
+                "properties": {
+                  "key_id": {
+                    "type": "string",
+                    "pattern": "^sha256:[a-f0-9]{64}$",
+                    "description": "SHA-256 fingerprint of the public key; does not expose the cloud KMS resource identifier."
+                  },
+                  "algorithm": {
+                    "type": "string",
+                    "const": "RSASSA_PSS_SHA_256"
+                  },
+                  "encoding": {
+                    "type": "string",
+                    "const": "base64"
+                  },
+                  "signed_payload": {
+                    "type": "string"
+                  },
+                  "signature": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ModuleFinding": {
+        "type": "object",
+        "properties": {
+          "headline": {
+            "type": "string"
+          },
+          "bullets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "basis": {
+            "type": "string"
+          }
+        }
+      },
+      "BriefingResultResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "briefing"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "success"
+          },
+          "api_version": {
+            "type": "string",
+            "const": "v1"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "briefing": {
+            "type": "object",
+            "required": [
+              "page",
+              "as_of",
+              "result"
+            ],
+            "properties": {
+              "page": {
+                "type": "string"
+              },
+              "as_of": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date",
+                "description": "Source date when available; null when the source provides no freshness timestamp."
+              },
+              "result": {
+                "type": "object",
+                "description": "Page-specific source-backed output. Expanded routes include screener_briefing, alphadeck_briefing, explorer_briefing, performance_detail, frontier_briefing, seasonality_briefing, profiler_briefing, projection_briefing, risk_analytics, and Daily Insight daily_briefing/daily_history. See the Developer API reference for field groups and source limitations."
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "error",
+          "code"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Mindrative Institutional Ultra Plan required."
+          },
+          "code": {
+            "type": "string",
+            "example": "PLAN_RESTRICTION"
+          },
+          "request_id": {
+            "type": "string",
+            "example": "req_8f1b2c4d6e9a"
+          },
+          "documentation": {
+            "type": "string",
+            "example": "https://developer.mindrative.com#authentication"
+          }
+        }
+      }
+    }
+  }
+}

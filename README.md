@@ -1,5 +1,5 @@
 <div align="center">
-dis
+
 <img src="assets/logo_mindrative_512x512_red.png" alt="Mindrative Quant API Logo" width="88" height="88" style="border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);" />
 
 # Mindrative Institutional Quantitative Developer API

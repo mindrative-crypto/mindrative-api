@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mindrative Developer API — Institutional Quantitative Portfolio &amp; Risk Analytics</title>
+  <meta name="description" content="High-throughput institutional REST API for deterministic portfolio valuation, multi-factor risk telemetry, Sharpe, Beta, VaR, signed audit receipts, and 12 market briefings.">
+  <meta name="keywords" content="quantitative finance API, portfolio analytics API, portfolio scan REST, real-time risk modeling, Sharpe ratio API, beta calculation, signed audit receipts, OAuth 2.0 financial API, OpenAPI 3.0, fintech developer API, institutional backtesting, factor screener API">
+  <meta name="author" content="Mindrative Technologies Inc.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://developer.mindrative.com/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://developer.mindrative.com/">
+  <meta property="og:title" content="Mindrative Developer API — Institutional Portfolio &amp; Risk Analytics">
+  <meta property="og:description" content="Deterministic close-based portfolio valuation, factor risk telemetry, signed audit receipts, and 12 institutional market briefings.">
+  <meta property="og:image" content="https://developer.mindrative.com/assets/logo_mindrative_512x512_red.png">
+  <meta property="og:site_name" content="Mindrative Quant Developers">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@mindrative">
+  <meta name="twitter:title" content="Mindrative Developer API — Institutional Quantitative Risk Engine">
+  <meta name="twitter:description" content="Sub-second portfolio scans, signed audit receipts, and 12 modular market briefings computed strictly from observed exchange closes.">
+  <meta name="twitter:image" content="https://developer.mindrative.com/assets/logo_mindrative_512x512_red.png">
+
+  <!-- Structured Data (JSON-LD) for SEO Rich Snippets -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://developer.mindrative.com/#software",
+        "name": "Mindrative Developer API",
+        "description": "High-throughput REST API for quantitative portfolio valuation, factor risk telemetry, NAV, Beta, Sharpe, daily 95% VaR, signed audit receipts, and 12 market briefings.",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "All",
+        "softwareVersion": "1.0.0",
+        "offers": {
+          "@type": "Offer",
+          "price": "69.00",
+          "priceCurrency": "USD",
+          "category": "Subscription"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Mindrative Technologies Inc.",
+          "url": "https://mindrative.com",
+          "logo": "https://developer.mindrative.com/assets/logo_mindrative_512x512_red.png"
+        }
+      },
+      {
+        "@type": "WebAPI",
+        "@id": "https://developer.mindrative.com/#webapi",
+        "name": "Mindrative Institutional Quantitative REST API",
+        "description": "Programmatic portfolio analytics, factor decomposition, and cryptographic audit receipts.",
+        "documentation": "https://developer.mindrative.com",
+        "termsOfService": "https://mindrative.com/terms.html"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Google tag (gtag.js) with Consent Mode v2 -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    (function(){
+      var consent = localStorage.getItem("mindrative_cookie_consent") === "accepted";
+      gtag("consent", "default", {
+        "analytics_storage": consent ? "granted" : "denied",
+        "ad_storage": consent ? "granted" : "denied",
+        "ad_user_data": consent ? "granted" : "denied",
+        "ad_personalization": consent ? "granted" : "denied"
+      });
+      if (consent) {
+        gtag("consent", "update", {
+          "analytics_storage": "granted",
+          "ad_storage": "granted",
+          "ad_user_data": "granted",
+          "ad_personalization": "granted"
+        });
+      }
+      window.__loadDeferredGtag = function() {
+        if (window.__gtagLoaded) return;
+        window.__gtagLoaded = true;
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=G-4YMCT2C6BR";
+        document.head.appendChild(s);
+        gtag("js", new Date());
+        gtag("config", "G-4YMCT2C6BR", {
+          page_title: "GitHub Pages // Mindrative Developer API",
+          page_location: window.location.href
+        });
+      };
+      if (document.readyState === "complete") {
+        if ("requestIdleCallback" in window) window.requestIdleCallback(window.__loadDeferredGtag, { timeout: 3500 });
+        else setTimeout(window.__loadDeferredGtag, 2000);
+      } else {
+        window.addEventListener("load", function() {
+          if ("requestIdleCallback" in window) window.requestIdleCallback(window.__loadDeferredGtag, { timeout: 3500 });
+          else setTimeout(window.__loadDeferredGtag, 2000);
+        }, { once: true });
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="assets/logo_mindrative_512x512_red.png">
+</head>
+<body>
+
+  <!-- NAVIGATION HEADER -->
+  <header class="nav-header">
+    <div class="brand-wrapper">
+      <img src="assets/logo_mindrative_512x512_red.png" alt="Mindrative Logo" class="brand-logo-img">
+      <div class="brand-title">Mindrative <span>Developer API</span></div>
+      <span class="pill-tier">Ultra Tier</span>
+    </div>
+
+    <ul class="nav-links">
+      <li><a href="#playground">Playground</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#briefings">12 Briefings</a></li>
+      <li><a href="#security">Audit &amp; OAuth</a></li>
+      <li><a href="#quickstart">Quickstart</a></li>
+      <li><a href="#endpoints">Endpoints</a></li>
+      <li><a href="#tiers">Tiers</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <a href="openapi.json" target="_blank" class="btn btn-ghost btn-sm">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        OpenAPI Spec
+      </a>
+      <a href="https://github.com/mindrative-crypto/mindrative-api" target="_blank" class="btn btn-ghost btn-sm">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        GitHub Repo
+      </a>
+      <a href="https://mindrative.com/account.html#tab-developer" target="_blank" class="btn btn-primary btn-sm">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        Get API Key
+      </a>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge-wrap">
+        <span class="hero-badge-dot"></span>
+        <span>MINDRATIVE QUANT ENGINE &bull; PRODUCTION REST V1</span>
+      </div>
+
+      <h1>Deterministic Portfolio Valuation &amp; Institutional Risk Telemetry</h1>
+
+      <p class="hero-lead">
+        High-throughput portfolio scans, 12 modular domain briefings, cryptographically signed audit receipts, and OAuth 2.0 authentication computed strictly from observed exchange closes. Missing values are never synthesized.
+      </p>
+
+      <div class="hero-actions">
+        <a href="https://mindrative.com/account.html#tab-developer" target="_blank" class="btn btn-primary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+          Provision an API Key
+        </a>
+        <a href="#playground" class="btn btn-secondary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          Interactive Sandbox
+        </a>
+        <a href="https://github.com/mindrative-crypto/mindrative-api" target="_blank" class="btn btn-ghost">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub Repository
+        </a>
+      </div>
+
+      <div class="github-badges">
+        <span class="gh-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Latency: <strong>&lt; 180ms Synch</strong>
+        </span>
+        <span class="gh-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Valuation: <strong>Observed Closes Only</strong>
+        </span>
+        <span class="gh-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Compliance: <strong>HSM Signed Receipts</strong>
+        </span>
+        <span class="gh-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Security: <strong>Zero-Knowledge Hashing</strong>
+        </span>
+        <span class="gh-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Compute: <strong>Async Jobs Supported</strong>
+        </span>
+      </div>
+
+      <!-- INTERACTIVE TERMINAL PLAYGROUND -->
+      <div class="terminal-window" id="playground">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+          </div>
+          <div class="terminal-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            Interactive Developer Console // Production REST v1
+          </div>
+          <div role="note" style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono);">Real OpenAPI 3.0 schema simulation</div>
+          <button class="btn btn-ghost btn-sm" data-copy="terminalCode" title="Copy Code">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+
+        <div class="terminal-grid">
+          <!-- LEFT: REQUEST BUILDER -->
+          <div class="terminal-left">
+            <div class="terminal-toolbar">
+              <div class="lang-tabs">
+                <button class="lang-tab active" data-lang="python">Python</button>
+                <button class="lang-tab" data-lang="javascript">Node.js</button>
+                <button class="lang-tab" data-lang="curl">cURL</button>
+                <button class="lang-tab" data-lang="go">Go</button>
+              </div>
+              <div class="preset-selector">
+                <span>Route:</span>
+                <select id="endpointSelect" class="endpoint-select">
+                  <option value="portfolio_scan">POST /v1/portfolio/scan</option>
+                  <option value="oauth_token">POST /v1/oauth/token</option>
+                  <option value="receipts_keys">GET /v1/receipts/keys</option>
+                  <option value="brief_macro">POST /v1/brief/macro</option>
+                </select>
+                <span>Preset:</span>
+                <select id="presetSelect" class="preset-select">
+                  <option value="tech_growth">Tech Growth (NVDA/AAPL/MSFT)</option>
+                  <option value="all_weather">Macro All-Weather (SPY/TLT/GLD/XLE)</option>
+                  <option value="quant_momentum">High-Beta Momentum (PLTR/TSLA/AMD)</option>
+                </select>
+              </div>
+            </div>
+
+            <pre class="code-editor-area"><code id="terminalCode"></code></pre>
+
+            <div class="terminal-action-bar">
+              <span style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono);">Pre-flight symbol quota &bull; Idempotent (24h)</span>
+              <button id="runScanBtn" class="btn btn-primary btn-sm">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Run Scan Simulation
+              </button>
+            </div>
+          </div>
+
+          <!-- RIGHT: RESPONSE VIEWER -->
+          <div class="terminal-right">
+            <div class="response-toolbar">
+              <div class="response-status">
+                <span class="status-badge ok">200 OK</span>
+                <span style="color:var(--text-muted);">Latency: <strong id="respLatency" style="color:var(--emerald);">138ms</strong></span>
+              </div>
+              <button class="btn btn-ghost btn-sm" data-copy="responseJson" title="Copy Response JSON">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy JSON
+              </button>
+            </div>
+
+            <div class="response-body">
+              <div class="response-highlight-cards">
+                <div class="resp-card">
+                  <div class="resp-card-label">Daily 95% VaR</div>
+                  <div class="resp-card-val cyan" id="respVar">2.14%</div>
+                </div>
+                <div class="resp-card">
+                  <div class="resp-card-label">Portfolio Beta</div>
+                  <div class="resp-card-val green" id="respBeta">1.28</div>
+                </div>
+                <div class="resp-card">
+                  <div class="resp-card-label">Sharpe Ratio</div>
+                  <div class="resp-card-val amber" id="respSharpe">1.84</div>
+                </div>
+              </div>
+
+              <pre><code id="responseJson"></code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FEATURES SECTION -->
+  <section id="features">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Institutional Quant Architecture</span>
+        <h2>Engineered for Prime Desks &amp; FinTech Platforms</h2>
+        <p>Mindrative computes real-time portfolio valuation, multi-factor risk telemetry, and domain briefings strictly from observed exchange data. Missing history fails closed with explicit error codes—no hallucinations, no synthetic extrapolation.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          </div>
+          <h3>Deterministic Observed Valuation</h3>
+          <p>Portfolio NAV, period returns, and benchmark-relative alpha in basis points (bps) are computed exclusively from verified exchange closing prices.</p>
+        </div>
+
+        <div class="feature-card cyan">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>Cryptographically Signed Receipts</h3>
+          <p>Every portfolio scan returns an HMAC-SHA256 digest and HSM-backed RSASSA-PSS signature with key fingerprint for MiFID II and SEC Rule 204-2 compliance.</p>
+        </div>
+
+        <div class="feature-card purple">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h3>Zero-Knowledge Security</h3>
+          <p>API keys are verified via high-entropy SHA-256 digests. Portfolios execute entirely in volatile memory and are never persisted to long-term database storage.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <h3>Asynchronous High-Throughput Jobs</h3>
+          <p>Heavy frontier optimizations or 10,000-path Monte Carlo projections accept <code>Prefer: respond-async</code>, returning HTTP 202 with polling job IDs.</p>
+        </div>
+
+        <div class="feature-card cyan">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          </div>
+          <h3>OAuth 2.0 Short-Lived Tokens</h3>
+          <p>Exchange client credentials via <code>POST /v1/oauth/token</code> for 15-minute bearer tokens with embedded IP allowlists and granular route scopes.</p>
+        </div>
+
+        <div class="feature-card purple">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+          </div>
+          <h3>Best-Effort Idempotency</h3>
+          <p>Opaque <code>Idempotency-Key</code> headers prevent accidental trade or scan double-executions, cached securely for up to 24 hours.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 PAGE-LEVEL BRIEFINGS SHOWCASE -->
+  <section id="briefings">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">12 Domain-Specific Telemetry Endpoints</span>
+        <h2>Complete Market &amp; Strategy Intelligence</h2>
+        <p>Access modular, headless quantitative feeds for your algorithmic trading infrastructure. Each briefing reflects source-backed observations and explicit methodology without speculative hallucination.</p>
+      </div>
+
+      <div class="briefings-grid">
+        <div class="briefing-card">
+          <div class="briefing-badge">MACRO INTELLIGENCE</div>
+          <div class="briefing-title">News, Regime &amp; Sentiment</div>
+          <div class="briefing-desc">Classified news sentiment, growth/liquidity macroeconomic regimes, and daily historical sentiment scores.</div>
+          <div class="briefing-endpoint">POST /v1/brief/macro</div>
+        </div>
+
+        <div class="briefing-card">
+          <div class="briefing-badge">STOCK SCREENER</div>
+          <div class="briefing-title">Signals &amp; Cross-Sectional Z-Scores</div>
+          <div class="briefing-desc">Technical RSI, MACD histograms, trend metrics, 52-week price range boundaries, and coverage status.</div>
+          <div class="briefing-endpoint">POST /v1/brief/screener</div>
+        </div>
+
+        <div class="briefing-card">
+          <div class="briefing-badge">ALPHADECK DECK</div>
+          <div class="briefing-title">Holding Rankings &amp; Momentum</div>
+          <div class="briefing-desc">Observed one-month return rankings, relative leaders/laggards, and close-derived factor context.</div>
+          <div class="briefing-endpoint">POST /v1/brief/alphadeck</div>
+        </div>
+
+        <div class="briefing-card">
+          <div class="briefing-badge">STRATEGY BACKTEST</div>
+          <div class="briefing-title">Historical Fixed-Share Valuation</div>
+          <div class="briefing-desc">Fixed-share portfolio valuation series, benchmark price series, Sharpe, Beta, and maximum historical drawdown.</div>
+          <div class="briefing-endpoint">POST /v1/brief/backtest</div>
+        </div>
+
+        <div class="briefing-card">
+          <div class="briefing-badge">HISTORICAL ALLOCATION</div>
+          <div class="briefing-title">Minimum-Variance Optimization</div>
+          <div class="briefing-desc">Deterministic long-only minimum-variance asset weights, covariance matrices, and risk/return comparisons.</div>
+          <div class="briefing-endpoint">POST /v1/brief/frontier</div>
+        </div>
+
+        <div class="briefing-card">
+          <div class="briefing-badge">SEASONALITY CYCLES</div>
+          <div class="briefing-title">Calendar-Month Return Distributions</div>
+          <div class="briefing-desc">Holding and portfolio historical calendar-month return distributions, win rates, and observation counts.</div>
+          <div class="briefing-endpoint">POST /v1/brief/seasonality</div>
+        </div>
+
+        <div class="briefing-card">
+          <div class="briefing-badge">DEEP PROFILER</div>
+          <div class="briefing-title">Source Corporate Fundamentals</div>
+          <div class="briefing-desc">Observed balance sheet, income statement, valuation multiples, and debt ratios passed directly from verified sources.</div>
+          <div class="briefing-endpoint">POST /v1/brief/profiler</div>
+        </div>
+
+        <div class="briefing-card">
+          <div class="briefing-badge">HISTORICAL SCENARIOS</div>
+          <div class="briefing-title">Monte Carlo &amp; Rolling Scenarios</div>
+          <div class="briefing-desc">10,000-path Geometric Brownian Motion (GBM) model combined with realized rolling 1M, 3M, and 6M returns.</div>
+          <div class="briefing-endpoint">POST /v1/brief/projection</div>
+        </div>
+
+        <div class="briefing-card">
+          <div class="briefing-badge">SYSTEM DIAGNOSTICS</div>
+          <div class="briefing-title">Data Coverage &amp; Freshness</div>
+          <div class="briefing-desc">Trading day history completeness, quote freshness, missing calendar dates, and indicator calculation status.</div>
+          <div class="briefing-endpoint">POST /v1/brief/diagnostics</div>
+        </div>
+
+        <div class="briefing-card">
+          <div class="briefing-badge">DAILY INSIGHT</div>
+          <div class="briefing-title">Holding Contributions &amp; Movers</div>
+          <div class="briefing-desc">Fixed-share value contributions, active measurement windows, and top intraday portfolio drivers.</div>
+          <div class="briefing-endpoint">POST /v1/brief/insight</div>
+        </div>
+
+        <div class="briefing-card">
+          <div class="briefing-badge">MARKET PULSE</div>
+          <div class="briefing-title">Benchmark Volatility &amp; Drawdowns</div>
+          <div class="briefing-desc">Index performance, rolling realized volatility, maximum drawdown depths, and macro price context.</div>
+          <div class="briefing-endpoint">POST /v1/brief/market</div>
+        </div>
+
+        <div class="briefing-card">
+          <div class="briefing-badge">PORTFOLIO EXPLORER</div>
+          <div class="briefing-title">Recent Closes &amp; Performance Context</div>
+          <div class="briefing-desc">Last 10 observed daily closing prices alongside close-derived factor context for submitted tickers.</div>
+          <div class="briefing-endpoint">POST /v1/brief/explorer</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECURITY & CRYPTOGRAPHIC AUDIT RECEIPTS -->
+  <section id="security">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Institutional Compliance &amp; Governance</span>
+        <h2>Cryptographically Signed Audit Receipts</h2>
+        <p>To eliminate trade settlement disputes and satisfy SEC Rule 204-2 and MiFID II recordkeeping standards, Mindrative signs every portfolio valuation response with HSM-backed RSASSA-PSS digital signatures.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h3>Asymmetric Digital Signatures</h3>
+          <p>Each response includes a detached signature generated using Hardware Security Modules (HSM) with standard RSASSA-PSS and SHA-256 digests.</p>
+        </div>
+
+        <div class="feature-card cyan">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <h3>Public Key Discovery</h3>
+          <p>Clients can independently fetch the public PEM certificate and key fingerprint via <code>GET /v1/receipts/keys</code> to cryptographically verify responses offline.</p>
+        </div>
+
+        <div class="feature-card purple">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>Per-Key IP Allowlisting</h3>
+          <p>Restrict production API keys and OAuth tokens to specific corporate IP addresses or VPC CIDR ranges. Forwarding headers are rejected to prevent IP spoofing.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICKSTART GUIDE -->
+  <section id="quickstart">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Developer Quickstart</span>
+        <h2>Up and Running in 3 Minutes</h2>
+        <p>Integrate institutional risk analytics into your automated trading workflow with four simple steps.</p>
+      </div>
+
+      <div class="steps-container">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <h4>Provision API Key</h4>
+          <p>Generate a secure <code>mnd_live_...</code> API key in your Mindrative Ultra Account Settings.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <h4>Set Bearer Header</h4>
+          <p>Include <code>Authorization: Bearer &lt;key&gt;</code> and a unique <code>Idempotency-Key</code> in every request.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <h4>Submit Portfolio</h4>
+          <p>POST ticker symbols, share counts, and target weights to <code>/v1/portfolio/scan</code> with your chosen benchmark.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">04</div>
+          <h4>Consume Intel</h4>
+          <p>Receive NAV, beta, Sharpe, 95% VaR, holding contributions, and cryptographically signed audit receipts in JSON.</p>
+        </div>
+      </div>
+
+      <!-- PYTHON SDK EXAMPLE -->
+      <div class="code-container">
+        <div class="code-header">
+          <span>mindrative_risk_scanner.py &bull; Python Integration Example</span>
+          <button class="btn btn-ghost btn-sm" data-copy="pythonFullCode">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Script
+          </button>
+        </div>
+        <pre class="code-body"><code id="pythonFullCode">import os
+import sys
+import uuid
+import requests
+
+API_KEY = os.environ.get("MINDRATIVE_API_KEY", "mnd_live_your_ultra_key")
+ENDPOINT = "https://api.mindrative.com/v1/portfolio/scan"
+
+def scan_portfolio(positions, benchmark="SPY", client_reference=None):
+    """
+    Submits positions for deterministic close-based portfolio valuation and risk telemetry.
+    Returns calculated NAV, Sharpe, Beta, VaR, holding contributions, and signed audit receipt.
+    """
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json",
+        "Idempotency-Key": f"portfolio-eval-{uuid.uuid4().hex[:12]}"
+    }
+
+    payload = {
+        "benchmark": benchmark,
+        "timeframe": "3M",
+        "include_ai_memo": False,
+        "positions": positions
+    }
+    if client_reference is not None:
+        payload["note"] = client_reference
+
+    resp = requests.post(ENDPOINT, json=payload, headers=headers, timeout=12)
+
+    if resp.status_code == 400:
+        err = resp.json()
+        if err.get("code") == "SYMBOL_LIMIT_EXCEEDED":
+            print(f"[!] Quota Exceeded: Max allowed symbols is {err.get('max_allowed_symbols')}")
+        sys.exit(1)
+
+    resp.raise_for_status()
+    return resp.json()
+
+if __name__ == "__main__":
+    my_positions = [
+        {"symbol": "NVDA", "shares": 50, "weight": 40.0},
+        {"symbol": "AAPL", "shares": 40, "weight": 30.0},
+        {"symbol": "MSFT", "shares": 30, "weight": 30.0}
+    ]
+
+    print("Executing quantitative scan via Mindrative Engine...")
+    result = scan_portfolio(my_positions, benchmark="QQQ", client_reference="Q3 Alpha Strategy")
+
+    scan = result["scan"]
+    summary = scan["summary"]
+    print(f"Portfolio NAV:      ${summary['nav']:,.2f}")
+    print(f"Period Return (3M): {summary['period_return_pct']:+.2f}%")
+    print(f"Alpha vs QQQ:       {summary['vs_benchmark_bps']:+} bps")
+    print(f"Portfolio Beta:     {summary['beta']:.2f}")
+    print(f"Sharpe Ratio:       {summary['annualized_sharpe']:.2f}")
+    print(f"Daily 95% VaR:      {summary['daily_var_95_pct']:.2f}%")
+    print(f"Receipt Key ID:     {result.get('receipt', {}).get('key_id')}")
+</code></pre>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ENDPOINTS TABLE -->
+  <section id="endpoints">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">API Route Reference</span>
+        <h2>Complete Endpoints Directory</h2>
+        <p>All endpoints accept standard JSON payloads and support Bearer token or OAuth 2.0 access token authentication.</p>
+      </div>
+
+      <div class="table-container">
+        <table class="endpoints-table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Endpoint Route</th>
+              <th>Description</th>
+              <th>Rate Limit</th>
+              <th>Scope</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/portfolio/scan</td>
+              <td>Close-based portfolio valuation, NAV, risk telemetry, holding contributions &amp; signed audit receipt</td>
+              <td>60 req/min</td>
+              <td><code>portfolio:scan</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/oauth/token</td>
+              <td>OAuth 2.0 client credentials token exchange for 15-minute bearer access tokens</td>
+              <td>120 req/min</td>
+              <td>Public / Basic</td>
+            </tr>
+            <tr>
+              <td><span class="method-tag" style="background:rgba(6,182,212,0.15); color:var(--cyan); border:1px solid rgba(6,182,212,0.35);">GET</span></td>
+              <td class="endpoint-url">/v1/jobs/{job_id}</td>
+              <td>Poll asynchronous job execution status and retrieve terminal computation results</td>
+              <td>120 req/min</td>
+              <td><code>portfolio:scan</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag" style="background:rgba(6,182,212,0.15); color:var(--cyan); border:1px solid rgba(6,182,212,0.35);">GET</span></td>
+              <td class="endpoint-url">/v1/receipts/keys</td>
+              <td>Public RSASSA-PSS verification key and SHA-256 fingerprint discovery</td>
+              <td>120 req/min</td>
+              <td>Public</td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/brief/macro</td>
+              <td>Published Macro Intel classified news, regime signals, and sentiment history</td>
+              <td>60 req/min</td>
+              <td><code>brief:read</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/brief/screener</td>
+              <td>Observed returns, RSI/MACD, trend, 52-week range boundaries, and cross-sectional z-scores</td>
+              <td>60 req/min</td>
+              <td><code>brief:read</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/brief/alphadeck</td>
+              <td>Close-derived holding context and one-month return leaders/laggards rankings</td>
+              <td>60 req/min</td>
+              <td><code>brief:read</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/brief/backtest</td>
+              <td>Fixed-share valuation, benchmark history, holding context, Sharpe, and drawdown</td>
+              <td>60 req/min</td>
+              <td><code>brief:read</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/brief/frontier</td>
+              <td>Deterministic long-only minimum-variance asset weights and covariance comparisons</td>
+              <td>60 req/min</td>
+              <td><code>brief:read</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/brief/seasonality</td>
+              <td>Holding and portfolio calendar-month return distributions, win rates, and sample counts</td>
+              <td>60 req/min</td>
+              <td><code>brief:read</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/brief/profiler</td>
+              <td>Source corporate fundamentals: valuation, profitability, growth, and financial debt ratios</td>
+              <td>60 req/min</td>
+              <td><code>brief:read</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/brief/projection</td>
+              <td>10,000-path Geometric Brownian Motion (GBM) model &amp; realized rolling historical scenarios</td>
+              <td>60 req/min</td>
+              <td><code>brief:read</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/brief/diagnostics</td>
+              <td>Historical trading day coverage, quote freshness, missing dates, and indicator validity</td>
+              <td>60 req/min</td>
+              <td><code>brief:read</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/brief/insight</td>
+              <td>Fixed-share holding daily contributions, measurement window, and top intraday movers</td>
+              <td>60 req/min</td>
+              <td><code>brief:read</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/brief/market</td>
+              <td>Benchmark return, rolling realized volatility, drawdown depths, and macro price context</td>
+              <td>60 req/min</td>
+              <td><code>brief:read</code></td>
+            </tr>
+            <tr>
+              <td><span class="method-tag post">POST</span></td>
+              <td class="endpoint-url">/v1/brief/explorer</td>
+              <td>Ten recent observed closing prices and close-derived historical performance context</td>
+              <td>60 req/min</td>
+              <td><code>brief:read</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIERS & QUOTAS -->
+  <section id="tiers">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Subscription Access</span>
+        <h2>API Access &amp; Quota Matrix</h2>
+        <p>Developer API access is unlocked exclusively for Mindrative Ultra and Enterprise subscribers. Save 20% on annual billing.</p>
+      </div>
+
+      <div class="tiers-grid">
+        <div class="tier-card">
+          <div class="tier-title">Alpha / Free</div>
+          <div class="tier-desc">Essential web terminal access for individual traders exploring market factors.</div>
+          <div class="tier-price">$0 <span>/ month</span></div>
+          <ul class="tier-features">
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Up to 5 symbols</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 3 Portfolio Auto-Generations / day</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Daily Insight &amp; Market Pulse</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Portfolio Diagnostics &amp; Screener</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Limited report exports</li>
+            <li style="color:var(--text-muted);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> No Developer API Access (Ultra only)</li>
+            <li style="color:var(--text-muted);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> No Signed Audit Receipts</li>
+          </ul>
+          <a href="https://mindrative.com/plan.html?plan=FREE" class="btn btn-secondary">Get Started Free</a>
+        </div>
+
+        <div class="tier-card">
+          <div class="tier-title">Pro Tier</div>
+          <div class="tier-desc">Ideal for active investors requiring deep historical backtests and terminal analytics.</div>
+          <div class="tier-price">$29 <span>/ month</span></div>
+          <ul class="tier-features">
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Up to 30 symbols</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Unlimited Portfolio Auto-Generations</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Advanced analytics &amp; 25+ Yrs deep backtests</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Limited data exports (CSV/JSON/PYTHON)</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Priority data refresh &amp; no ads</li>
+            <li style="color:var(--text-muted);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> No Developer API Access (Ultra only)</li>
+            <li style="color:var(--text-muted);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> No Signed Audit Receipts</li>
+          </ul>
+          <a href="https://mindrative.com/plan.html" class="btn btn-secondary">Select Pro</a>
+        </div>
+
+        <div class="tier-card featured">
+          <span class="featured-pill">Developer API Included</span>
+          <div class="tier-title">Ultra Tier</div>
+          <div class="tier-desc">Power users, quantitative developers, and systematic trading desks.</div>
+          <div class="tier-price">$69 <span>/ month</span></div>
+          <ul class="tier-features">
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>Full Developer REST API Access</strong></li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>Up to 300 symbols</strong> (portfolio scan &amp; briefings)</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>60 requests/min &bull; 10,000 scans/month</strong></li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>All 12 Domain Briefing Endpoints</strong></li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>HSM-backed signed audit receipts</strong></li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> OAuth 2.0 Client Credentials Grant</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Asynchronous Job Polling (<code>Prefer: respond-async</code>)</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Unlimited report &amp; data exports (CSV/JSON/PYTHON)</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Per-Key IP allowlisting &amp; priority support</li>
+          </ul>
+          <a href="https://mindrative.com/account.html#tab-developer" class="btn btn-primary">Provision Ultra Key</a>
+        </div>
+
+        <div class="tier-card">
+          <div class="tier-title">Enterprise Tier</div>
+          <div class="tier-desc">Unlimited scale tailored for institutional funds, prop desks, and family offices.</div>
+          <div class="tier-price" style="font-size:1.85rem;">Custom <span style="font-size:0.85rem;">/ bespoke SLA</span></div>
+          <ul class="tier-features">
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>Custom API throughput up to 1,200 req/min</strong></li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>Unlimited monthly portfolio scans</strong></li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>Dedicated priority cluster with 99.995% uptime</strong></li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Custom symbol quotas &amp; dedicated data feeds</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> White-glove onboarding &amp; dedicated Slack channel</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Custom integrations &amp; institutional DPA</li>
+          </ul>
+          <a href="https://mindrative.com/contact.html?plan=ENTERPRISE" class="btn btn-secondary">Contact Institutional Sales</a>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:1.5rem; font-size:0.82rem; color:var(--text-muted);">
+        Looking for beginner web access? <strong>Plus Plan</strong> ($9/mo, 10 symbols) and <strong>Free Community access</strong> are also available via the web terminal.
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <section style="border-bottom:none;">
+    <div class="container">
+      <div class="cta-banner">
+        <h2>Institutionalize Your Algorithmic Risk Stack Today</h2>
+        <p>Integrate close-based valuation, 12 modular domain briefings, and cryptographically signed audit receipts into your quantitative infrastructure.</p>
+        <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+          <a href="https://mindrative.com/account.html#tab-developer" target="_blank" class="btn btn-primary">
+            Get Your Ultra API Key
+          </a>
+          <a href="https://developer.mindrative.com" target="_blank" class="btn btn-secondary">
+            Official Developer Portal
+          </a>
+          <a href="https://github.com/mindrative-crypto/mindrative-api" target="_blank" class="btn btn-ghost">
+            View on GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem;">
+            <img src="assets/logo_mindrative_512x512_red.png" alt="Mindrative" style="width:24px; height:24px; border-radius:4px;">
+            <strong style="color:var(--text-primary); font-size:1.1rem;">Mindrative</strong>
+          </div>
+          <p style="font-size:0.84rem; line-height:1.6; max-width:320px;">
+            Institutional quantitative analytics, deterministic portfolio valuation, risk telemetry, and cryptographic audit receipts for modern trading desks.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h5>Developer Resources</h5>
+          <ul>
+            <li><a href="https://developer.mindrative.com">Developer Portal</a></li>
+            <li><a href="openapi.json">OpenAPI 3.0 Specification</a></li>
+            <li><a href="#playground">Interactive Sandbox</a></li>
+            <li><a href="#quickstart">Python SDK Guide</a></li>
+            <li><a href="https://github.com/mindrative-crypto/mindrative-api">GitHub Repository</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Platform</h5>
+          <ul>
+            <li><a href="https://mindrative.com">Quant Terminal</a></li>
+            <li><a href="https://mindrative.com/index.html#pricing">Pricing &amp; Tiers</a></li>
+            <li><a href="https://mindrative.com/account.html#tab-developer">API Key Management</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Security &amp; Legal</h5>
+          <ul>
+            <li><a href="https://mindrative.com/privacy.html">Privacy Policy</a></li>
+            <li><a href="https://mindrative.com/terms.html">Terms of Service</a></li>
+            <li><a href="#security">Zero-Knowledge Architecture</a></li>
+            <li><a href="LICENSE">Apache 2.0 License</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin: 2rem 0 1.5rem 0; padding: 1.25rem; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.76rem; color: var(--text-muted); line-height: 1.6; text-align: justify;">
+        <strong style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.04em;">Disclaimer:</strong>
+        Mindrative Intelligence is exclusively a mathematical and statistical analysis platform provided for informational purposes only. It does not constitute a trading platform, brokerage, or exchange. None of the statistics, API endpoints, telemetry, charts, or algorithms provided herein constitute financial advice, investment advice, or trading advice of any kind. All calculations are descriptive and derived strictly from observed historical market closes. All trading and investment involves significant risk of loss. Users must conduct independent research and consult a licensed financial advisor before making investment decisions. Historical performance, backtested models, and scenario simulations are not indicative of future results.
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 Mindrative Intelligence Systems. All rights reserved.</div>
+        <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">
+          STATUS: API v1 &bull; REST &bull; HTTPS
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- COOKIE CONSENT BANNER -->
+  <div id="consentBanner" class="consent-banner">
+    <div class="consent-text">
+      We use cookies and telemetry strictly to analyze developer traffic and improve API documentation reliability. No financial strategies or API payloads are ever tracked or shared.
+    </div>
+    <div class="consent-actions">
+      <button id="consentDecline" class="btn btn-ghost btn-sm">Decline</button>
+      <button id="consentAccept" class="btn btn-primary btn-sm">Accept All</button>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
